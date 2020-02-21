@@ -11,23 +11,8 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const db = admin.firestore();
-const vacCollection1 = db.collection("vac1");
-const vacCollection2 = db.collection("vac2");
-const vacCollection3 = db.collection("vac3");
-const vacCollection4 = db.collection("vac4");
-const vacCollection5 = db.collection("vac5");
-const vacCollection6 = db.collection("vac6");
-const vacCollection7 = db.collection("vac7");
-const vacCollection8 = db.collection("vac8");
-const vacCollection9 = db.collection("vac9");
-const vacCollection10 = db.collection("vac10");
-const vacCollection11 = db.collection("vac11");
-const vacCollection12 = db.collection("vac12");
-const vacCollection13 = db.collection("vac13");
-const vacCollection14 = db.collection("vac14");
-const vacCollection15 = db.collection("vac15");
-const vacCollection16 = db.collection("vac16");
-const vacCollection17 = db.collection("vac17");
+const vacCollection = db.collection("vac");
+
 
 
 // Automatically allow cross-origin requests
@@ -37,22 +22,20 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 // build multiple CRUD interfaces:
 app.get('/', (req, res) => {
-    res.send('Hello GET by noomerZx')
+    res.send('Hello GET ')
 });
 
 app.get('/vac', (req, res,) => {
     let allVac = [];
-    vacCollection1.get().then(snapshot => {
+    vacCollection.orderBy("vaccode").get().then(snapshot => {
         snapshot.forEach(doc => {
-            allVac.push({
-                "vacId" : doc.id,
-                "dataVac" : doc.data()
-            })
+            allVac.push(doc.data())
         })
+        
         return res.json({
             "statuscode" : "200",
             "message" : "All Vac",
-            "data" : allVac
+            "data" : allVac,
         })
     })
     .catch(err => {
@@ -68,7 +51,7 @@ app.post('/add', (req, res) => {
             "detail": req.body.detail,
             "time": req.body.time,
         }
-        let setNewVac = vacCollection1.add(newVac);
+        let setNewVac = vacCollection.add(newVac);
         res.json({
             "message" : "added"
         })
@@ -97,7 +80,7 @@ app.post('/add2', (req, res) => {
                 "price": element.price,
                 "times": element.times,
             }
-            let setNewVac = vacCollection1.add(newVac);
+            let setNewVac = vacCollection.add(newVac);
         });
     }
     res.json({
@@ -107,7 +90,7 @@ app.post('/add2', (req, res) => {
 });
 
   // Expose Express API as a single Cloud Function:
-exports.hello = functions.https.onRequest(app);
+exports.vacapi = functions.region("asia-east2").https.onRequest(app);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //

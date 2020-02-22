@@ -12,84 +12,229 @@ admin.initializeApp();
 
 const db = admin.firestore();
 const vacCollection = db.collection("vac");
-
-
+const vacUserCollection = db.collection("vac_user");
+const userCollection = db.collection("user");
 
 // Automatically allow cross-origin requests
 app.use(cors({ origin: true }));
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
+let dataV = [];
+
+
+vacCollection.orderBy("time", "asc").get().then(async snapshot => {
+    await Promise.all(snapshot.forEach(doc => {
+        dataV.push(doc.data())
+    }))
+
+    return dataV;
+})
+    .catch(err => {
+        console.log('error', err);
+    });
+
+
 // build multiple CRUD interfaces:
 app.get('/', (req, res) => {
+    functions.storage.object().onChange(event => {
+        console.log(event)
+    })
     res.send('Hello GET ')
 });
 
-app.get('/vac', (req, res,) => {
+app.get('/vaclist', (req, res, ) => {
     let allVac = [];
-    vacCollection.orderBy("vaccode").get().then(snapshot => {
+    vacCollection.where("time", "==", 1).orderBy("vaccode", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+app.get('/vaclistall', (req, res, ) => {
+    let allVac = [];
+    vacCollection.orderBy("vaccode", "asc").get().then(snapshot => {
         snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
-        
+
         return res.json({
-            "statuscode" : "200",
-            "message" : "All Vac",
-            "data" : allVac,
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
         })
     })
-    .catch(err => {
-        console.log('error',err);
-    })
-});
-
-app.post('/add', (req, res) => {
-    
-        let newVac = {
-            "vacid": req.body.vacid,
-            "type": req.body.type,
-            "detail": req.body.detail,
-            "time": req.body.time,
-        }
-        let setNewVac = vacCollection.add(newVac);
-        res.json({
-            "message" : "added"
+        .catch(err => {
+            console.log('error', err);
         })
-    
 });
 
-app.post('/add2', (req, res) => {
-    
-    let data = [];
-    data = req.body;
+app.get('/getvacbycode/:id', (req, res, ) => {
+    let allVac = [];
 
-    if(data.length !== 0){
-        data.forEach(element => {
-            let newVac = {
+    let Vcode = req.params.id;
 
-                "no": element.no,
-                "type": element.type,
-                "age": element.age,
-                "name": element.name,
-                "detail": element.detail,
-                "protect": element.protect,
-                "amount": element.amount,
-                "effect": element.effect,
-                "care": element.care,
-                "tips": element.tips,
-                "price": element.price,
-                "times": element.times,
-            }
-            let setNewVac = vacCollection.add(newVac);
-        });
+    vacCollection.where("vaccode", "==", Vcode).orderBy("time", "asc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+app.get('/getvacbytype/:id', (req, res, ) => {
+    let allVac = [];
+
+    let Vtype = req.params.id;
+
+    vacCollection.where("vactype", "==", Vtype).where("time", "==", 1).orderBy("vaccode", "asc").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+
+//vac_user collection
+app.post('/addVacByUser', (req, res) => {
+
+    let ms = null;
+    let setNewVac;
+    let allVac = dataV.filter(data => {
+        return data.vaccode === req.body.vaccode
+    });
+
+    if(allVac.length === 0 || allVac === null || allVac === undefined){
+        ms = "Error please try again"
+        return ms
     }
+    else{
+        let timeS = [];
+        let d = new Date(req.body.start_date);
+
+    allVac.forEach(e => {
+        
+        if(e.time >= req.body.start_from){
+            //d.setDate(d.getDate() + e.period);
+            d.setDate(d.getDate() + e.period);
+            var dd = d.getDate();
+            var mm = d.getMonth() + 1;
+            var y = d.getFullYear();
+
+            timeS.push({
+                "time" : e.time,
+                "date_to": y + '-' + mm + '-' + dd,
+                "current_times" : req.body.start_date
+            })
+            //d = d.setDate(d.getDate() + e.period);
+        }
+    })
+
+    let newVacs = {
+        "username": req.body.username,
+        "vaccode": req.body.vaccode,
+        "vacnameth": req.body.vacnameth,
+        "vacnameen": req.body.vacnameen,
+        "start_from": req.body.start_from,
+        "start_date": req.body.start_date,
+        "hospital": req.body.hospital,
+        "vactimes": timeS
+    }
+
+    setNewVac = vacUserCollection.add(newVacs);
+    ms = "added"
+    }
+
     res.json({
-        "message" : "added"
+        "message": ms,
+        "data": allVac,
+        "test" : setNewVac
     })
 
 });
 
-  // Expose Express API as a single Cloud Function:
+app.get('/gethistorybyid/:id', (req, res, ) => {
+    let allVac = [];
+
+    let uId = req.params.id;
+
+    vacUserCollection.where("uid", "==", uId).get().then(snapshot => {
+        snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+
+//user collection
+app.get('/getuser', (req, res, ) => {
+    let alluser = [];
+
+    userCollection.get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            alluser.push({
+                "uid" : doc.id,
+                "username" : doc.data().username,
+                "password" : doc.data().password,
+                "email" : doc.data().email,
+                "birth_date" : doc.data().birth_date,
+                "age" : doc.data().age,
+                "weight" : doc.data().weight,
+                "height" : doc.data().height,
+            })
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All user",
+            "data": alluser,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
+// Expose Express API as a single Cloud Function:
 exports.vacapi = functions.region("asia-east2").https.onRequest(app);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -100,82 +245,3 @@ exports.vacapi = functions.region("asia-east2").https.onRequest(app);
 
 
 
-// [
-// 	{
-// 		"no": 1,
-// 		"type": "A",
-// 		"age": "0-3 ปี",
-// 		"name": "วัคซีนป้องกันวัณโรค (BCG)",
-// 		"detail": "วัณโรคเกิดจากเชื้อแบคทีเรีย สามารถติดเชื้อได้ผ่านการไอ จามหรือการพูดคุย โดยจะมีอาการไอเรื้อรัง มีเสมหะ มีไข้ต่ำๆ อ่อนเพลีย เบื่ออาหาร น้ำหนักลด และแน่นหน้าอก และอาจรุนแรงจนถึงขั้นเสียชีวิต",
-// 		"protect": "เมื่อได้รับวัคซีนครบตามกำหนด ภูมิคุ้มกันจะอยู่นานถึง10 ปี",
-// 		"amount": "ฉีดเพียง 1 ครั้ง ตอนแรกเกิด",
-// 		"effect": "อาจเป็นแผลหนองและต่อมน้ำเหลืองบริเวณที่ฉีด",
-// 		"care": "ควรดูเเลรักษาความสะอาดบริเวณผิวหนังที่ฉีด โดยใช้สําลีสะอาดชุบน้ำเช็ดให้สะอาด ถ้าต่อมน้ำเหลืองโตและเป็นฝี ควรพบแพทย์เพื่อทำการดูดหนองออก และรับยาต้านวัณโรคในบางกรณี",
-// 		"tips": "-",
-// 		"price": "โรงพยาบาลรัฐบาล ฟรี",
-// 		"times": [
-// 			{
-// 				"time": 1,
-// 				"period": 0
-// 			}
-// 			]
-// 	},
-// 	{
-// 		"no": 2,
-// 		"type": "A",
-// 		"age": "0-3 ปี",
-// 		"name": "วัคซีนไวรัสตับอักเสบบี (HB)",
-// 		"detail": "ไวรัสตับอักเสบบีเกิดจากเชื้อไวรัสที่อยู่ภายในเลือด สามารถติดเชื้อผ่านทางเลือด โดยจะมีอาการอ่อนเพลีย เบื่ออาหาร มีไข้ต่ำ ปวดท้อง ตัวเหลือง ตาเหลือง และอาจเป็นโรคตับแข็งและมะเร็งตับได้งขั้นเสียชีวิต",
-// 		"protect": "เมื่อได้รับวัคซีนครบตามกำหนด ภูมิคุ้มกันจะอยู่ได้มากกว่า 20 ปี",
-// 		"amount": "ฉีดทั้งหมด 3 ครั้ง เมื่อตอนแรกเกิด, 2 และ 6 เดือน",
-// 		"effect": "อาจมีอาการปวด บวม บริเวณที่ฉีด หรือมีไข้ต่ำประมาณ 1-2วัน",
-// 		"care": "ควรให้ทานยาลดไข้ และเช็ดตัวด้วยน้ำอุณหภูมิห้อง ส่วนบริเวณที่บวมให้ใช้ธีประคบเย็น",
-// 		"tips": "-",
-// 		"price": "โรงพยาบาลรัฐบาล ราคาเข็มละ 300-500 บาท โรงพยาบาลเอกชน ราคาเข็มละ 600-1200 บาท",
-// 		"times": [
-// 			{
-// 				"time": 1,
-// 				"period": 30
-// 			},
-// 			{
-// 				"time": 2,
-// 				"period": 180
-// 			},
-// 			{
-// 				"time": 3,
-// 				"period": 0
-// 			}
-// 			]
-// 	},
-// 	{
-// 		"no": 3,
-// 		"type": "A",
-// 		"age": "0-3 ปี",
-// 		"name": "วัคซีนรวมป้องกันโรคคอตีบ-บาดทะยัก-ไอกรน (DTP)",
-// 		"detail": "โรคคอตีบ เกิดจากเชื้อแบคทีเรียที่อยู่ภายในเยื่อบุคอ สามารถติดเชื้อผ่านทางน้ำลาย เสมหะ น้ำมูก การหายใจ ไอ หรือ จาม โดยจะมีอาการคออักเสบอย่างรุนแรง อาจทำให้เสียชีวิตจากทางเดินหายใจอุดกั้นได้ หรือจากพิษของเชื้อทำให้กล้ามเนื้อหัวใจอักเสบ หรือปลายประสาทอักเสบได้ โรคไอกรน เกิดจากเชื้อเเบคทีเรียที่อยู่ในลำคอ สามารถติดเชื้อผ่านทางละอองที่เกิดจากการไอ หรือจาม โดยจะมีอาการไอรุนแรง หายใจเข้ามีเสียงดัง หรือการอาเจียนจากการไอ ตัวเขียว จนหยุดหายใจได้ โรคบาดทะยัก เกิดจากเชื้อเเบคทีเรียที่อยู่ในดิน ฝุ่นละออง ผิวหนัง และอุจจาระของคน สามารถติดเชื้อผ่านทางบาดแผลโดยเฉพาะบาดแผลที่ลึกเข้าไปในผิวหนัง โดยจะมีอาการกล้ามเนื้อทำงานผิดปกติ ขากรรไกรแข็ง อ้าปากไม่ค่อยได้ เกร็ง ชักกระตุก หรือหยุดหายใจได้",
-// 		"protect": "เมื่อได้รับวัคซีนครบตามกำหนด ภูมิคุ้มกันจะอยู่นานถึง10 ปี",
-// 		"amount": "ฉีดทั้งหมด 5 ครั้ง เมื่อตอนอายุ 2, 4, 6, 18 เดือน และ 4-6 ปี",
-// 		"effect": "อาจมีไข้ ปวด บวม แดงบริเวณที่ฉีด",
-// 		"care": "ควรให้ทานยาลดไข้ และเช็ดตัวด้วยน้ำอุณหภูมิห้อง ส่วนบริเวณที่บวมให้ใช้ธีประคบเย็น",
-// 		"tips": "-",
-// 		"price": "โรงพยาบาลรัฐบาล ราคาเข็มละ 350-700 บาท โรงพยาบาลเอกชน ราคาเข็มละ 1,000-1,500 บาท",
-// 		"times": [
-// 			{
-// 				"time": 1,
-// 				"period": 60
-// 			},
-// 			{
-// 				"time": 2,
-// 				"period": 60
-// 			},
-// 			{
-// 				"time": 3,
-// 				"period": 60
-// 			},
-// 			{
-// 				"time": 4,
-// 				"period": 360
-// 			}
-// 			]
-// 	}
-// ]

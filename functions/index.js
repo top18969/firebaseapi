@@ -20,26 +20,65 @@ app.use(cors({ origin: true }));
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-let dataV = [];
-
-
-vacCollection.orderBy("time", "asc").get().then(async snapshot => {
-    await Promise.all(snapshot.forEach(doc => {
-        dataV.push(doc.data())
-    }))
-
-    return dataV;
-})
-    .catch(err => {
-        console.log('error', err);
-    });
-
 
 // build multiple CRUD interfaces:
 app.get('/', (req, res) => {
-    functions.storage.object().onChange(event => {
-        console.log(event)
-    })
+    let data = [
+        {
+            "vactotal": "ฉีดทั้งหมด 5 ครั้ง เมื่อตอนอายุ 2, 4, 6, 18 เดือน และ 4-6 ปี",
+            "vacnameen": "DTP",
+            "vacage": "0-3 ปี",
+            "vactype": "A",
+            "period": 60,
+            "time": 2,
+            "vaccode": "A003",
+            "vacnameth": "วัคซีนรวมป้องกันโรคคอตีบ-บาดทะยัก-ไอกรน"
+        },
+        {
+            "vactotal": "ฉีดทั้งหมด 5 ครั้ง เมื่อตอนอายุ 2, 4, 6, 18 เดือน และ 4-6 ปี",
+            "vacnameen": "DTP",
+            "vacage": "0-3 ปี",
+            "vactype": "A",
+            "period": 60,
+            "time": 3,
+            "vaccode": "A003",
+            "vacnameth": "วัคซีนรวมป้องกันโรคคอตีบ-บาดทะยัก-ไอกรน"
+        },
+        {
+            "vactotal": "ฉีดทั้งหมด 5 ครั้ง เมื่อตอนอายุ 2, 4, 6, 18 เดือน และ 4-6 ปี",
+            "vacnameen": "DTP",
+            "vacage": "0-3 ปี",
+            "vactype": "A",
+            "period": 360,
+            "time": 4,
+            "vaccode": "A003",
+            "vacnameth": "วัคซีนรวมป้องกันโรคคอตีบ-บาดทะยัก-ไอกรน"
+        },
+        {
+            "vactotal": "ฉีดทั้งหมด 5 ครั้ง เมื่อตอนอายุ 2, 4, 6, 18 เดือน และ 4-6 ปี",
+            "vacnameen": "DTwP",
+            "vacage": "4-12 ปี",
+            "vactype": "B",
+            "period": 920,
+            "time": 5,
+            "vaccode": "B001",
+            "vacnameth": "วัคซีนรวมป้องกันโรคคอตีบ-บาดทะยัก-ไอกรน"
+        },
+        {
+            "vactotal": "วัคซีนป้องกันโรคโปลิโอสามารถเลือกได้ว่าจะฉีดชนิดใด โดยมีทั้งหมด 2  ชนิด คือ /n วัคซีนโรคโปลิโอชนิดรับประทานจะรับทั้งหมด 5 ครั้ง เมื่ออายุ 2,4,6 และ 18 เดือน และให้วัคซีนกระตุ้นอีกครั้ง เมื่ออายุ 4-6 ปี /n /n วัคซีนโปลิโอชนิดฉีด ฉีดทั้งหมด 5 ครั้ง เมื่ออายุ 2,4, 6,18 เดือน และกระตุ้นอีกครั้ง เมื่ออายุ 4-6 ปี",
+            "vacnameen": "OPV, IPV",
+            "vacage": "4-12 ปี",
+            "vactype": "B",
+            "period": 0,
+            "time": 5,
+            "vaccode": "B002",
+            "vacnameth": "วัคซีนป้องกันโรคโปลิโอ"
+        },
+    ]
+
+    // data.forEach(dt => {
+    //     vacCollection.add(dt)
+    // })
     res.send('Hello GET ')
 });
 
@@ -51,7 +90,7 @@ app.get('/vaclist', (req, res, ) => {
         })
 
         return res.json({
-            "statuscode": "200",
+            "statuscode": 200,
             "message": "All Vac",
             "data": allVac,
         })
@@ -63,13 +102,31 @@ app.get('/vaclist', (req, res, ) => {
 
 app.get('/vaclistall', (req, res, ) => {
     let allVac = [];
-    vacCollection.orderBy("vaccode", "asc").get().then(snapshot => {
-        snapshot.forEach(doc => {
+    vacCollection.orderBy("vaccode", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
 
         return res.json({
-            "statuscode": "200",
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+app.get('/getvacforsave', (req, res, ) => {
+    let allVac = [];
+    vacCollection.orderBy("time", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
             "message": "All Vac",
             "data": allVac,
         })
@@ -84,8 +141,8 @@ app.get('/getvacbycode/:id', (req, res, ) => {
 
     let Vcode = req.params.id;
 
-    vacCollection.where("vaccode", "==", Vcode).orderBy("time", "asc").get().then(snapshot => {
-        snapshot.forEach(doc => {
+    vacCollection.where("vaccode", "==", Vcode).orderBy("time", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
 
@@ -102,16 +159,22 @@ app.get('/getvacbycode/:id', (req, res, ) => {
 
 app.get('/getvacbytype/:id', (req, res, ) => {
     let allVac = [];
+    let checkItem = [];
 
     let Vtype = req.params.id;
 
-    vacCollection.where("vactype", "==", Vtype).where("time", "==", 1).orderBy("vaccode", "asc").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            allVac.push(doc.data())
+    vacCollection.where("vactype", "==", Vtype).orderBy("vaccode", "asc").orderBy("time","asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            let chks = checkItem.indexOf(doc.data().vaccode)
+            if(chks < 0){
+                checkItem.push(doc.data().vaccode)
+                allVac.push(doc.data())
+            }
+            //allVac.push(doc.data())
         })
 
         return res.json({
-            "statuscode": "200",
+            "statuscode": 200,
             "message": "All Vac",
             "data": allVac,
         })
@@ -127,6 +190,10 @@ app.post('/addVacByUser', (req, res) => {
 
     let ms = null;
     let setNewVac;
+    let dataV =[];
+
+    dataV = req.body.vacdata;
+
     let allVac = dataV.filter(data => {
         return data.vaccode === req.body.vaccode
     });
@@ -157,26 +224,84 @@ app.post('/addVacByUser', (req, res) => {
         }
     })
 
-    let newVacs = {
-        "username": req.body.username,
-        "vaccode": req.body.vaccode,
-        "vacnameth": req.body.vacnameth,
-        "vacnameen": req.body.vacnameen,
-        "start_from": req.body.start_from,
-        "start_date": req.body.start_date,
-        "hospital": req.body.hospital,
-        "vactimes": timeS
-    }
+    let uvac = "";
 
-    setNewVac = vacUserCollection.add(newVacs);
-    ms = "added"
-    }
+    vacUserCollection.where("username","==",req.body.username).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            uvac = doc.id
+        })
 
-    res.json({
-        "message": ms,
-        "data": allVac,
-        "test" : setNewVac
+        if(uvac !== null && uvac !== "" && uvac !== undefined){
+            let newVacs = {
+                "username": req.body.username,
+                "vaccode": req.body.vaccode,
+                "vacnameth": req.body.vacnameth,
+                "vacnameen": req.body.vacnameen,
+                "start_from": req.body.start_from,
+                "start_date": req.body.start_date,
+                "hospital": req.body.hospital,
+                "vactimes": timeS,
+            }
+        
+            setNewVac = vacUserCollection.doc(uvac).update(newVacs)
+            ms = "updated"
+        }
+        else{
+            let newVacs = {
+                "username": req.body.username,
+                "vaccode": req.body.vaccode,
+                "vacnameth": req.body.vacnameth,
+                "vacnameen": req.body.vacnameen,
+                "start_from": req.body.start_from,
+                "start_date": req.body.start_date,
+                "hospital": req.body.hospital,
+                "vactimes": timeS,
+            }
+        
+            setNewVac = vacUserCollection.add(newVacs);
+            ms = "added"
+            
+        }
+
+        return res.json({
+            "statuscode":200,
+            "message": ms,
+            "data": allVac,
+            "test" : uvac
+        })
     })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+
+
+
+
+
+    //     let newVacs = {
+    //         "username": req.body.username,
+    //         "vaccode": req.body.vaccode,
+    //         "vacnameth": req.body.vacnameth,
+    //         "vacnameen": req.body.vacnameen,
+    //         "start_from": req.body.start_from,
+    //         "start_date": req.body.start_date,
+    //         "hospital": req.body.hospital,
+    //         "vactimes": timeS,
+    //     }
+
+    //     setNewVac = vacUserCollection.add(newVacs);
+    //     ms = "added"
+    }
+
+    // res.json({
+    //     "statuscode": 200,
+    //     "message": ms,
+    //     "data": allVac,
+    //     "test": setNewVac
+    // })
 
 });
 
@@ -185,19 +310,52 @@ app.get('/gethistorybyid/:id', (req, res, ) => {
 
     let uId = req.params.id;
 
-    vacUserCollection.where("uid", "==", uId).get().then(snapshot => {
-        snapshot.forEach(doc => {
+    vacUserCollection.where("username", "==", uId).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
 
         return res.json({
-            "statuscode": "200",
+            "statuscode": 200,
             "message": "All Vac",
             "data": allVac,
         })
     })
         .catch(err => {
             console.log('error', err);
+        })
+});
+
+app.post('/gethistorybyuv', (req, res, ) => {
+    let alluser = [];
+    let checkVal = true;
+    let resMes = "";
+    userCollection.where("username","==",req.body.username).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            alluser.push(doc.data())
+        })
+
+        if(alluser.length !== 0){
+            checkVal = true,
+            resMes = "login"
+        }
+        else{
+            checkVal = false,
+            resMes = "Invalid username or password !"
+        }
+
+        return res.json({
+            "statuscode": 200,
+            "login": checkVal,
+            "message": resMes,
+            "data" : alluser
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
         })
 });
 
@@ -221,7 +379,7 @@ app.get('/getuser', (req, res, ) => {
         })
 
         return res.json({
-            "statuscode": "200",
+            "statuscode": 200,
             "message": "All user",
             "data": alluser,
         })
@@ -233,6 +391,110 @@ app.get('/getuser', (req, res, ) => {
             })
         })
 });
+
+app.post('/adduser', (req, res) => {
+
+    let ms = null;
+    
+    if (req !== null && req !== undefined) {
+
+        let newUser = {
+            "username": req.body.username,
+            "password": req.body.password,
+            "email": req.body.email,
+            "birth_date": req.body.birth_date,
+            "age": req.body.age,
+            "weight": req.body.weight,
+            "height": req.body.height,
+            "name": req.body.name,
+            "surname": req.body.surname,
+            "blood_type": req.body.blood_type,
+            "drug_al": req.body.drug_al,
+            "sick": req.body.sick,
+        }
+
+        let setNewVac = userCollection.add(newUser);
+
+        res.json({
+            "statuscode": 200,
+            "message": "user added",
+        })
+    }
+    else{
+        res.json({
+            "statuscode": 404,
+            "message": "Error input not found",
+        })
+    }
+});
+
+app.post('/adduservalidate', (req, res, ) => {
+    let alluser = [];
+    let checkVal = true;
+    let resMes = "";
+    userCollection.where("username","==",req.body.username).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            alluser.push(doc.data())
+        })
+
+        if(alluser.length !== 0){
+            checkVal = false,
+            resMes = "Username already exists"
+        }
+        else{
+            checkVal = true,
+            resMes = "ok"
+        }
+
+        return res.json({
+            "statuscode": 200,
+            "checkuser": checkVal,
+            "message": resMes,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
+app.post('/userlogin', (req, res, ) => {
+    let alluser = [];
+    let checkVal = true;
+    let resMes = "";
+    userCollection.where("username","==",req.body.username).where("password","==",req.body.password).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            alluser.push(doc.data())
+        })
+
+        if(alluser.length !== 0){
+            checkVal = true,
+            resMes = "login"
+        }
+        else{
+            checkVal = false,
+            resMes = "Invalid username or password !"
+        }
+
+        return res.json({
+            "statuscode": 200,
+            "login": checkVal,
+            "message": resMes,
+            "data" : alluser
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
+
+
 
 // Expose Express API as a single Cloud Function:
 exports.vacapi = functions.region("asia-east2").https.onRequest(app);

@@ -226,14 +226,14 @@ app.post('/addVacByUser', (req, res) => {
 
     let uvac = "";
 
-    vacUserCollection.where("username","==",req.body.username).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
+    vacUserCollection.where("email","==",req.body.email).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
         await snapshot.forEach(doc => {
             uvac = doc.id
         })
 
         if(uvac !== null && uvac !== "" && uvac !== undefined){
             let newVacs = {
-                "username": req.body.username,
+                "email": req.body.email,
                 "vaccode": req.body.vaccode,
                 "vacnameth": req.body.vacnameth,
                 "vacnameen": req.body.vacnameen,
@@ -248,7 +248,7 @@ app.post('/addVacByUser', (req, res) => {
         }
         else{
             let newVacs = {
-                "username": req.body.username,
+                "email": req.body.email,
                 "vaccode": req.body.vaccode,
                 "vacnameth": req.body.vacnameth,
                 "vacnameen": req.body.vacnameen,
@@ -310,7 +310,7 @@ app.get('/gethistorybyid/:id', (req, res, ) => {
 
     let uId = req.params.id;
 
-    vacUserCollection.where("username", "==", uId).get().then(async snapshot => {
+    vacUserCollection.where("email", "==", uId).get().then(async snapshot => {
         await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
@@ -330,7 +330,7 @@ app.post('/gethistorybyuv', (req, res, ) => {
     let alluser = [];
     let checkVal = true;
     let resMes = "";
-    userCollection.where("username","==",req.body.username).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
+    userCollection.where("email","==",req.body.email).where("vaccode","==",req.body.vaccode).get().then(async snapshot => {
         await snapshot.forEach(doc => {
             alluser.push(doc.data())
         })
@@ -341,7 +341,7 @@ app.post('/gethistorybyuv', (req, res, ) => {
         }
         else{
             checkVal = false,
-            resMes = "Invalid username or password !"
+            resMes = "Invalid email or password !"
         }
 
         return res.json({
@@ -368,7 +368,7 @@ app.get('/getuser', (req, res, ) => {
         await snapshot.forEach(doc => {
             alluser.push({
                 "uid" : doc.id,
-                "username" : doc.data().username,
+                //"username" : doc.data().username,
                 "password" : doc.data().password,
                 "email" : doc.data().email,
                 "birth_date" : doc.data().birth_date,
@@ -399,7 +399,7 @@ app.post('/adduser', (req, res) => {
     if (req !== null && req !== undefined) {
 
         let newUser = {
-            "username": req.body.username,
+            //"username": req.body.username,
             "password": req.body.password,
             "email": req.body.email,
             "birth_date": req.body.birth_date,
@@ -432,14 +432,14 @@ app.post('/adduservalidate', (req, res, ) => {
     let alluser = [];
     let checkVal = true;
     let resMes = "";
-    userCollection.where("username","==",req.body.username).get().then(async snapshot => {
+    userCollection.where("email","==",req.body.email).get().then(async snapshot => {
         await snapshot.forEach(doc => {
             alluser.push(doc.data())
         })
 
         if(alluser.length !== 0){
             checkVal = false,
-            resMes = "Username already exists"
+            resMes = "Email already exists"
         }
         else{
             checkVal = true,
@@ -464,7 +464,7 @@ app.post('/userlogin', (req, res, ) => {
     let alluser = [];
     let checkVal = true;
     let resMes = "";
-    userCollection.where("username","==",req.body.username).where("password","==",req.body.password).get().then(async snapshot => {
+    userCollection.where("email","==",req.body.email).where("password","==",req.body.password).get().then(async snapshot => {
         await snapshot.forEach(doc => {
             alluser.push(doc.data())
         })
@@ -475,7 +475,7 @@ app.post('/userlogin', (req, res, ) => {
         }
         else{
             checkVal = false,
-            resMes = "Invalid username or password !"
+            resMes = "Invalid email or password !"
         }
 
         return res.json({

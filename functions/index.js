@@ -75,11 +75,29 @@ app.get('/', (req, res) => {
             "vacnameth": "วัคซีนป้องกันโรคโปลิโอ"
         },
     ]
+    let dt;
+    admin.auth().listUsers(100).then(user => {
+         user.users.forEach(use2 => {
+             console.log(use2)
+             dt = use2.uid;
+             admin.auth().deleteUser(use2.uid)
+         })
+         return res.json({
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": dt,
+        })
+    })
+    .catch(err => {
+        console.log('error', err);
+    })
+
+    //admin.auth().deleteUser()
 
     // data.forEach(dt => {
     //     vacCollection.add(dt)
     // })
-    res.send('Hello GET ')
+    //res.send('Hello GET ')
 });
 
 app.get('/vaclist', (req, res, ) => {
@@ -392,6 +410,28 @@ app.get('/getuser', (req, res, ) => {
         })
 });
 
+app.get('/getuserbyemail/:id', (req, res, ) => {
+    let alluser = [];
+    let uId = req.params.id;
+    userCollection.where("email","==",uId).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            alluser.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "message": "All user",
+            "data": alluser,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
 app.post('/adduser', (req, res) => {
 
     let ms = null;
@@ -415,10 +455,38 @@ app.post('/adduser', (req, res) => {
 
         let setNewVac = userCollection.add(newUser);
 
-        res.json({
-            "statuscode": 200,
-            "message": "user added",
+        
+        userCollection.where("email","==",req.body.email).get().then(async snapshot => {
+            await snapshot.forEach(doc => {
+                alluser.push(doc.data())
+            })
+    
+            if(alluser.length !== 0){
+                checkVal = false,
+                resMes = "Email already exists"
+            }
+            else{
+                checkVal = true,
+                resMes = "ok"
+            }
+    
+            return res.json({
+                "statuscode": 200,
+                "checkuser": checkVal,
+                "message": resMes,
+            })
         })
+            .catch(err => {
+                console.log('error', err);
+                res.json({
+                    "message": "error" + err,
+                })
+            })
+
+        // res.json({
+        //     "statuscode": 200,
+        //     "message": "user added",
+        // })
     }
     else{
         res.json({

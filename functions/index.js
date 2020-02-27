@@ -76,21 +76,21 @@ app.get('/', (req, res) => {
         },
     ]
     let dt;
-    admin.auth().listUsers(100).then(user => {
-         user.users.forEach(use2 => {
-             console.log(use2)
-             dt = use2.uid;
-             admin.auth().deleteUser(use2.uid)
-         })
-         return res.json({
-            "statuscode": 200,
-            "message": "All Vac",
-            "data": dt,
-        })
-    })
-    .catch(err => {
-        console.log('error', err);
-    })
+    // admin.auth().listUsers(100).then(user => {
+    //      user.users.forEach(use2 => {
+    //          console.log(use2)
+    //          dt = use2.uid;
+    //          admin.auth().deleteUser(use2.uid)
+    //      })
+    //      return res.json({
+    //         "statuscode": 200,
+    //         "message": "All Vac",
+    //         "data": dt,
+    //     })
+    // })
+    // .catch(err => {
+    //     console.log('error', err);
+    // })
 
     //admin.auth().deleteUser()
 

@@ -14,6 +14,7 @@ const db = admin.firestore();
 const vacCollection = db.collection("vac");
 const vacUserCollection = db.collection("vac_user");
 const userCollection = db.collection("user");
+const keepdateCollection = db.collection("keepdate");
 
 // Automatically allow cross-origin requests
 app.use(cors({ origin: true }));
@@ -202,6 +203,16 @@ app.get('/getvacbytype/:id', (req, res, ) => {
         })
 });
 
+app.post('/testadd' , (req, res) => {
+    let get = {
+        "time" : new Date()
+    }
+    keepdateCollection.add(get)
+    res.json({
+        "message" : get
+    })
+}) 
+
 
 //vac_user collection
 app.post('/addVacByUser', (req, res) => {
@@ -235,7 +246,7 @@ app.post('/addVacByUser', (req, res) => {
 
             timeS.push({
                 "time" : e.time,
-                "date_to": y + '-' + mm + '-' + dd,
+                "date_to": y + '-' + ("0" + mm).slice(-2)  + '-' + dd,
                 "current_times" : req.body.start_date
             })
             //d = d.setDate(d.getDate() + e.period);
@@ -280,6 +291,24 @@ app.post('/addVacByUser', (req, res) => {
             ms = "added"
             
         }
+
+        await timeS.forEach(dt => {
+            let keep = {
+                "email": req.body.email,
+                "vaccode": req.body.vaccode,
+                "vacnameth": req.body.vacnameth,
+                "vacnameen": req.body.vacnameen,
+                "start_from": req.body.start_from,
+                "start_date": req.body.start_date,
+                "hospital": req.body.hospital,
+                "vacdate": dt.date_to,
+                "time" : dt.time,
+                "adddate" : new Date()
+            }
+
+            keepdateCollection.add(keep)
+        })
+
 
         return res.json({
             "statuscode":200,

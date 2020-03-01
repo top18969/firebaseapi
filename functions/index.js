@@ -220,6 +220,7 @@ app.post('/addVacByUser', (req, res) => {
     let ms = null;
     let setNewVac;
     let dataV =[];
+    let pr = 0;
 
     dataV = req.body.vacdata;
 
@@ -239,18 +240,21 @@ app.post('/addVacByUser', (req, res) => {
         
         if(e.time >= req.body.start_from){
             //d.setDate(d.getDate() + e.period);
-            d.setDate(d.getDate() + e.period);
+            d.setDate(d.getDate() + pr);
             var dd = d.getDate();
             var mm = d.getMonth() + 1;
             var y = d.getFullYear();
 
             timeS.push({
                 "time" : e.time,
-                "date_to": y + '-' + ("0" + mm).slice(-2)  + '-' + dd,
+                "date_to": y + '-' + ("0" + mm).slice(-2)  + '-' + ("0" + dd).slice(-2),
                 "current_times" : req.body.start_date
             })
+
+            pr += e.period;
             //d = d.setDate(d.getDate() + e.period);
         }
+        
     })
 
     let uvac = "";
@@ -305,7 +309,7 @@ app.post('/addVacByUser', (req, res) => {
                 "time" : dt.time,
                 "adddate" : new Date()
             }
-
+            
             keepdateCollection.add(keep)
         })
 
@@ -351,6 +355,37 @@ app.post('/addVacByUser', (req, res) => {
     // })
 
 });
+
+app.post('/gethisByDate', (req, res, ) => {
+    let allVac = [];
+    let finds = [];
+    let checkVal = true;
+    let resMes;
+    keepdateCollection.where("email","==",req.body.email).where("vacdate","==",req.body.vacdate).orderBy("adddate","desc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+
+            let chks = finds.indexOf(doc.data().vaccode)
+            if(chks < 0){
+                finds.push(doc.data().vaccode)
+                allVac.push(doc.data())
+            }
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "login": resMes,
+            "message": allVac,
+            //"data" : alluser
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
 
 app.get('/gethistorybyid/:id', (req, res, ) => {
     let allVac = [];

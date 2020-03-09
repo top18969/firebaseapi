@@ -202,9 +202,46 @@ app.get('/vaclist', (req, res, ) => {
         })
 });
 
+app.get('/vaclist2', (req, res, ) => {
+    let allVac = [];
+    vac2Collection.where("time", "==", 1).orderBy("vaccode", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
 app.get('/vaclistall', (req, res, ) => {
     let allVac = [];
     vacCollection.orderBy("vaccode", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": allVac,
+            "data2": allVac.length,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+app.get('/vaclistall2', (req, res, ) => {
+    let allVac = [];
+    vac2Collection.orderBy("vaccode", "asc").get().then(async snapshot => {
         await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
@@ -225,6 +262,23 @@ app.get('/vaclistall', (req, res, ) => {
 app.get('/getvacforsave', (req, res, ) => {
     let allVac = [];
     vacCollection.orderBy("time", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+app.get('/getvacforsave2', (req, res, ) => {
+    let allVac = [];
+    vac2Collection.orderBy("time", "asc").get().then(async snapshot => {
         await snapshot.forEach(doc => {
             allVac.push(doc.data())
         })
@@ -261,6 +315,27 @@ app.get('/getvacbycode/:id', (req, res, ) => {
         })
 });
 
+app.get('/getvacbycode2/:id', (req, res, ) => {
+    let allVac = [];
+
+    let Vcode = req.params.id;
+
+    vac2Collection.where("vaccode", "==", Vcode).orderBy("time", "asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": "200",
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
 app.get('/getvacbytype/:id', (req, res, ) => {
     let allVac = [];
     let checkItem = [];
@@ -268,6 +343,33 @@ app.get('/getvacbytype/:id', (req, res, ) => {
     let Vtype = req.params.id;
 
     vacCollection.where("vactype", "==", Vtype).orderBy("vaccode", "asc").orderBy("time","asc").get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            let chks = checkItem.indexOf(doc.data().vaccode)
+            if(chks < 0){
+                checkItem.push(doc.data().vaccode)
+                allVac.push(doc.data())
+            }
+            //allVac.push(doc.data())
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "message": "All Vac",
+            "data": allVac,
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+        })
+});
+
+app.get('/getvacbytype2/:id', (req, res, ) => {
+    let allVac = [];
+    let checkItem = [];
+
+    let Vtype = req.params.id;
+
+    vac2Collection.where("vactype", "==", Vtype).orderBy("vaccode", "asc").orderBy("time","asc").get().then(async snapshot => {
         await snapshot.forEach(doc => {
             let chks = checkItem.indexOf(doc.data().vaccode)
             if(chks < 0){
@@ -738,6 +840,8 @@ app.post('/adduservalidate', (req, res, ) => {
         })
 });
 
+
+
 app.post('/userlogin', (req, res, ) => {
     let alluser = [];
     let checkVal = true;
@@ -760,6 +864,42 @@ app.post('/userlogin', (req, res, ) => {
             "statuscode": 200,
             "login": checkVal,
             "message": resMes,
+            "data" : alluser
+        })
+    })
+        .catch(err => {
+            console.log('error', err);
+            res.json({
+                "message": "error" + err,
+            })
+        })
+});
+
+app.post('/updateuser', (req, res, ) => {
+    let alluser = [];
+    let checkVal = true;
+    let resMes = "";
+    userCollection.where("email","==",req.body.email).get().then(async snapshot => {
+        await snapshot.forEach(doc => {
+            userCollection.doc(doc.id).set({
+                "password": doc.data().password,
+                "email": doc.data().email,
+                "birth_date": req.body.birth_date,
+                "age": req.body.age,
+                "weight": req.body.weight,
+                "height": req.body.height,
+                "name": req.body.name,
+                "surname": req.body.surname,
+                "blood_type": req.body.blood_type,
+                "drug_al": req.body.drug_al,
+                "sick": req.body.sick
+            })
+        })
+
+        return res.json({
+            "statuscode": 200,
+            "login": checkVal,
+            "message": "success",
             "data" : alluser
         })
     })
